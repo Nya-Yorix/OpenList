@@ -1,0 +1,41 @@
+package data
+
+import (
+	"context"
+
+	"github.com/OpenListTeam/OpenList/v4/cmd/flags"
+	"github.com/OpenListTeam/OpenList/v4/internal/db"
+	"github.com/OpenListTeam/OpenList/v4/internal/model"
+	"github.com/OpenListTeam/OpenList/v4/internal/op"
+	log "github.com/sirupsen/logrus"
+)
+
+func initDevData() {
+	_, err := op.CreateStorage(context.Background(), model.Storage{
+		MountPath: "/",
+		Order:     0,
+		Driver:    "Local",
+		Status:    "",
+		Addition:  `{"root_folder_path":"."}`,
+	})
+	if err != nil {
+		log.Fatalf("failed to create storage: %+v", err)
+	}
+	err = db.CreateUser(&model.User{
+		Username:   "Noah",
+		Password:   "hsu",
+		BasePath:   "/data",
+		Role:       0,
+		Permission: 512,
+	})
+	if err != nil {
+		log.Fatalf("failed to create user: %+v", err)
+	}
+}
+
+func initDevDo() {
+	if flags.Dev {
+		// 消息系统已移除，dev 模式不再发送消息
+		log.Debugf("dev mode initialized")
+	}
+}

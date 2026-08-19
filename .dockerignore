@@ -1,0 +1,13 @@
+node_modules
+dist
+.git
+*.log
+.DS_Store
+coverage
+.nyc_output
+OpenList-Frontend/node_modules
+OpenList-Frontend/dist
+OpenList-Frontend-origin
+data
+bin
+*.tar.gz

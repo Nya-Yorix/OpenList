@@ -1,0 +1,30 @@
+# 本地构建版本 - 使用已编译的静态链接二进制
+# 使用 Alpine 基础镜像（5MB），静态链接二进制不依赖 glibc
+FROM alpine:3.20
+
+LABEL maintainer="OpenList"
+ARG USER=openlist
+ARG UID=1001
+ARG GID=1001
+
+WORKDIR /opt/openlist/
+
+# 安装 ca-certificates（TLS 证书）+ 创建用户（合并为一层）
+RUN apk add --no-cache ca-certificates && \
+    addgroup -g ${GID} ${USER} && \
+    adduser -D -u ${UID} -G ${USER} ${USER} && \
+    mkdir -p /opt/openlist/data /opt/openlist/public/dist
+
+# 复制已编译的二进制文件和前端文件（设置所有权）
+COPY --chown=${UID}:${GID} bin/openlist ./
+COPY --chown=${UID}:${GID} public/dist/ ./public/dist/
+COPY --chown=${UID}:${GID} entrypoint.sh /entrypoint.sh
+
+# 设置可执行权限
+RUN chmod 755 ./openlist /entrypoint.sh
+
+USER ${USER}
+ENV UMASK=022
+VOLUME /opt/openlist/data/
+EXPOSE 5244 5245
+CMD [ "/entrypoint.sh" ]
