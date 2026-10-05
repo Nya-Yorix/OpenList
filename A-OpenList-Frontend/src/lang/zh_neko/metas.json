@@ -1,0 +1,18 @@
+{
+  "path": "路径",
+  "password": "密码",
+  "read_users": "可以摸头的主人",
+  "read_users_help": "只有具有所需权限的主人才能摸我的头喵！",
+  "write_users": "可以喂食的主人",
+  "write_users_help": "只有具有所需权限的主人才能喂食文件喵~",
+  "all_permitted_users": "让我仔细筛选",
+  "write": "写入权限绕过",
+  "write_help": "开启后任何人都能写入内容喵（创建/上传/修改）。包括大坏蛋！！！！",
+  "hide": "隐藏",
+  "readme": "README",
+  "readme_help": "在底部渲染 Markdown，支持内容或链接喵",
+  "header": "Head",
+  "header_help": "在顶部渲染 Markdown，支持内容或链接喵",
+  "apply_sub": "应用到子文件夹",
+  "hide_help": "每行一个正则表达式喵"
+}

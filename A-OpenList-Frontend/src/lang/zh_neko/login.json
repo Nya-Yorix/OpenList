@@ -1,0 +1,13 @@
+{
+  "login_to": "进入",
+  "username-tips": "主人的名字喵",
+  "password-tips": "验证你就是我最爱的主人喵~",
+  "otp-tips": "第二关：OTP 验证码喵~",
+  "remember": "记住我喵",
+  "forget": "糟糕！忘记密码了！",
+  "forget_url": "https://doc.oplist.org/faq/howto#how-to-get-password-if-i-forget-it",
+  "clear": "清除",
+  "login": "进入",
+  "use_guest": "咳咳，我只是访客",
+  "success": "欢迎主人~"
+}
