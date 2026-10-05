@@ -14,7 +14,6 @@ on:
 
 permissions:
   contents: write
-  packages: write
 
 jobs:
   frontend:
@@ -138,9 +137,13 @@ jobs:
           if-no-files-found: error
 
   docker:
-    name: Docker 镜像 (GHCR)
+    name: Docker 镜像 (${{ matrix.platform }})
     runs-on: ubuntu-latest
     needs: [frontend]
+    strategy:
+      fail-fast: false
+      matrix:
+        platform: [amd64, arm64]
     steps:
       - uses: actions/checkout@v4
 
@@ -153,35 +156,30 @@ jobs:
 
       - uses: docker/setup-buildx-action@v3
 
-      - uses: docker/login-action@v3
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ github.token }}
+      - name: 构建镜像 (openlist:yorix)
+        run: |
+          docker buildx build \
+            --platform linux/${{ matrix.platform }} \
+            --build-arg USE_LOCAL_DIST=1 \
+            --tag openlist:yorix \
+            --load \
+            .
 
-      - uses: docker/metadata-action@v5
-        id: meta
-        with:
-          images: ghcr.io/${{ github.repository }}
-          tags: |
-            type=raw,value=yorix
+      - name: 导出镜像为 tar.gz
+        run: |
+          docker save openlist:yorix | gzip > openlist-docker-linux-${{ matrix.platform }}.tar.gz
+          ls -lh openlist-docker-linux-${{ matrix.platform }}.tar.gz
 
-      - uses: docker/build-push-action@v6
+      - uses: actions/upload-artifact@v4
         with:
-          context: .
-          platforms: linux/amd64,linux/arm64
-          push: true
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
-          build-args: |
-            USE_LOCAL_DIST=1
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          name: docker-image-${{ matrix.platform }}
+          path: openlist-docker-linux-${{ matrix.platform }}.tar.gz
+          if-no-files-found: error
 
   release:
     name: 发布 Release
     runs-on: ubuntu-latest
-    needs: [server, android-app]
+    needs: [server, android-app, docker]
     steps:
       - uses: actions/download-artifact@v4
         with:
@@ -204,5 +202,6 @@ jobs:
             产物说明:
             - `openlist-<os>-<arch>.tar.gz`: 服务端二进制（含 Windows/Linux/Android/Termux 目标）
             - `app-*-release.apk`: Android 分架构 APK（Yorix Custom Edition）
+            - `openlist-docker-linux-<arch>.tar.gz`: Docker 镜像导出（openlist:yorix，amd64/arm64），导入: `docker load -i <文件>`
           files: release-files/*
           make_latest: true
