@@ -145,6 +145,9 @@ jobs:
         env:
           CUSTOM_SRC: ${{ github.workspace }}
           FLUTTER_BIN: ${{ github.workspace }}/.github/scripts/flutter-shim.sh
+          # gomobile bind 内部会跑 go mod tidy; 默认的 goproxy.cn 在 CI 上 sumdb 校验易被掐断
+          GOPROXY: https://proxy.golang.org,https://goproxy.cn,direct
+          GOSUMDB: sum.golang.org
         run: |
           mkdir -p .github/scripts
           cat > .github/scripts/flutter-shim.sh <<'EOF'
