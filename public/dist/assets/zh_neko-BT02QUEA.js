@@ -1,0 +1,1 @@
+var e=`猫体中文`,t={lang:e};export{t as n,e as t};
