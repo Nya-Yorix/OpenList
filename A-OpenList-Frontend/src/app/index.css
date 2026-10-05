@@ -1,0 +1,124 @@
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-corner,
+::-webkit-scrollbar-track {
+  background-color: #e2e2e2;
+  border-radius: 2px;
+}
+
+::-webkit-scrollbar-thumb {
+  border-radius: 2px;
+  background-color: rgba(0, 0, 0, 0.3);
+}
+
+::-webkit-scrollbar-button:vertical {
+  display: none;
+}
+
+::-webkit-scrollbar-thumb:vertical:hover {
+  background-color: rgba(0, 0, 0, 0.35);
+}
+
+::-webkit-scrollbar-thumb:vertical:active {
+  background-color: rgba(0, 0, 0, 0.38);
+}
+
+/* dark */
+
+.hope-ui-dark ::-webkit-scrollbar-corner,
+.hope-ui-dark ::-webkit-scrollbar-track {
+  background-color: rgb(15, 15, 15);
+}
+
+.hope-ui-dark ::-webkit-scrollbar-thumb {
+  background-color: #2d2d2d;
+}
+
+.hope-ui-dark ::-webkit-scrollbar-thumb:vertical:hover {
+  background-color: rgb(58, 58, 58);
+}
+
+.hope-ui-dark ::-webkit-scrollbar-thumb:vertical:active {
+  background-color: rgb(58, 58, 58);
+}
+
+.hope-select__option {
+  flex-shrink: 0;
+}
+
+/* Fixes: https://github.com/OpenListTeam/OpenList-Frontend/issues/26 */
+.hope-notification__list {
+  width: unset;
+}
+
+/* ===== 顶部面包屑 → 居中毛玻璃标题栏 ===== */
+
+/* 容器:水平居中、限宽 600px、背景透明无模糊 */
+.nav.hope-breadcrumb {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 0;
+  background-color: transparent;
+  backdrop-filter: none;
+}
+
+/* 只显示最后一级 */
+.nav.hope-breadcrumb li {
+  display: none;
+}
+
+/* 最后一级:居中圆角标签,浅色毛玻璃 */
+.nav.hope-breadcrumb li:last-child {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto;
+  padding: 4px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  user-select: none;
+  transition: transform 0.2s;
+  background-color: rgba(0, 0, 0, 0.1);
+  -webkit-backdrop-filter: blur(3px);
+  backdrop-filter: blur(3px);
+}
+
+/* 悬停放大 */
+.hope-ui-light .nav.hope-breadcrumb li:last-child:hover,
+.hope-ui-dark .nav.hope-breadcrumb li:last-child:hover {
+  transform: scale(1.1);
+}
+
+/* 深色主题毛玻璃 */
+.hope-ui-dark .nav.hope-breadcrumb li:last-child {
+  background-color: rgba(0, 0, 0, 0.4);
+  -webkit-backdrop-filter: blur(5px);
+  backdrop-filter: blur(5px);
+}
+
+/* 标题文字 22px/600/居中,文字本身不带背景(含 hover) */
+.nav.hope-breadcrumb li:last-child span.nav-link,
+.hope-ui-light .nav.hope-breadcrumb li:last-child span.nav-link:hover,
+.hope-ui-dark .nav.hope-breadcrumb li:last-child span.nav-link:hover {
+  font-size: 22px;
+  font-weight: 600;
+  text-align: center;
+  background: none;
+}
+
+/* 顶部导航条:双主题透明 + xl 圆角,隐藏遮罩 */
+.body > .nav {
+  background-color: transparent;
+  border-radius: var(--hope-radii-xl);
+  backdrop-filter: none;
+}
+
+.body > .nav::after {
+  display: none;
+}

@@ -1,0 +1,122 @@
+name: Build All
+
+on:
+  workflow_dispatch:
+    inputs:
+      server_version:
+        description: '服务端二进制版本号 (build-all.sh)'
+        required: true
+        default: '5.2.0'
+      app_version:
+        description: 'App 版本号 (build-custom-app.sh)'
+        required: true
+        default: '5.2.1'
+
+permissions:
+  contents: write
+
+jobs:
+  server:
+    name: 服务端二进制 (Windows/Linux/Android)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: true
+
+      - name: 构建全部平台二进制
+        run: |
+          chmod +x build-all.sh
+          VERSION='${{ inputs.server_version }}' WEBVERSION=local ./build-all.sh
+
+      - name: 整理产物
+        run: mkdir -p artifacts && cp dist/*.tar.gz artifacts/
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: server-binaries
+          path: artifacts/*.tar.gz
+          if-no-files-found: error
+
+  android-app:
+    name: Android App (Flutter + gomobile)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: false
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: 安装 Android NDK 27.0.12077973 与 platform 35
+        run: |
+          yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses > /dev/null || true
+          yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" \
+            "ndk;27.0.12077973" "platforms;android-35" "build-tools;35.0.0" > /dev/null
+
+      - name: 安装 gomobile
+        run: go install golang.org/x/mobile/cmd/gomobile@latest && "$HOME/go/bin/gomobile" init
+
+      - name: 构建 APK
+        env:
+          CUSTOM_SRC: ${{ github.workspace }}
+          FLUTTER_BIN: ${{ github.workspace }}/.github/scripts/flutter-shim.sh
+        run: |
+          mkdir -p .github/scripts
+          cat > .github/scripts/flutter-shim.sh <<'EOF'
+          #!/usr/bin/env bash
+          # flutter-action 的 flutter 不在固定路径且不总在 PATH 中, 提供转发 shim
+          exec "${FLUTTER_ROOT:-$RUNNER_TOOL_CACHE/flutter}/bin/flutter" "$@"
+          EOF
+          chmod +x .github/scripts/flutter-shim.sh
+          chmod +x A-OpenList-Mobile/build-custom-app.sh
+          cd A-OpenList-Mobile && ./build-custom-app.sh '${{ inputs.app_version }}'
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: android-apks
+          path: A-OpenList-Mobile/app-build/*.apk
+          if-no-files-found: error
+
+  release:
+    name: 发布 Release
+    runs-on: ubuntu-latest
+    needs: [server, android-app]
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          merge-multiple: true
+          path: release-files
+
+      - name: 列出产物
+        run: ls -lh release-files/
+
+      - uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ inputs.app_version }}
+          name: OpenList v${{ inputs.app_version }}
+          body: |
+            自动构建（workflow_dispatch 触发）
+
+            - 服务端二进制版本: ${{ inputs.server_version }}
+            - App 版本: ${{ inputs.app_version }}
+
+            产物说明:
+            - `openlist-<os>-<arch>.tar.gz`: 服务端二进制（含 Windows/Linux/Android/Termux 目标）
+            - `app-*-release.apk`: Android 分架构 APK（Yorix Custom Edition）
+          files: release-files/*
+          make_latest: true

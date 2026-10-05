@@ -1,0 +1,30 @@
+# Dockerfile.static — 静态链接(scratch)镜像
+#
+# 由 build-image.sh 使用:它会先把静态二进制与 CA 证书/时区数据准备到 docker-context/,
+# 再以 docker-context/ 为构建上下文执行 docker build。
+# 这样无需拉取任何基础镜像(alpine/openlist-base-image),适合离线或镜像源受限环境。
+#
+# 手动构建:
+#   ./build-image.sh            # 推荐
+#   docker build -t openlist:local docker-context
+FROM scratch
+
+LABEL maintainer="OpenList" \
+      org.opencontainers.image.title="OpenList" \
+      org.opencontainers.image.description="OpenList (static, scratch-based)"
+
+# CA 证书(HTTPS 存储/在线 API 需要) 与 时区数据
+COPY ca-certificates.crt /etc/ssl/certs/ca-certificates.crt
+COPY zoneinfo/ /usr/share/zoneinfo/
+
+WORKDIR /opt/openlist
+COPY openlist /opt/openlist/openlist
+
+# scratch 无 shell,故直接以二进制作为入口(不经过 entrypoint.sh)
+ENV TZ=Asia/Shanghai \
+    UMASK=022 \
+    HOME=/opt/openlist \
+    TMPDIR=/opt/openlist/data/temp
+VOLUME /opt/openlist/data/
+EXPOSE 5244 5245
+ENTRYPOINT ["/opt/openlist/openlist", "server", "--no-prefix"]
