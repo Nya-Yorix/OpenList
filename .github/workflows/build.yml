@@ -14,6 +14,7 @@ on:
 
 permissions:
   contents: write
+  packages: write
 
 jobs:
   frontend:
@@ -135,6 +136,48 @@ jobs:
           name: android-apks
           path: A-OpenList-Mobile/app-build/*.apk
           if-no-files-found: error
+
+  docker:
+    name: Docker 镜像 (GHCR)
+    runs-on: ubuntu-latest
+    needs: [frontend]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: web-dist
+          path: public/dist
+
+      - uses: docker/setup-qemu-action@v3
+
+      - uses: docker/setup-buildx-action@v3
+
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ github.token }}
+
+      - uses: docker/metadata-action@v5
+        id: meta
+        with:
+          images: ghcr.io/${{ github.repository }}
+          tags: |
+            type=raw,value=v${{ inputs.server_version }}
+            type=raw,value=latest
+
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          build-args: |
+            USE_LOCAL_DIST=1
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
 
   release:
     name: 发布 Release

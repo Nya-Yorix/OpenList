@@ -3,6 +3,7 @@ ARG BASE_IMAGE_TAG=base
 
 FROM alpine:edge AS builder
 LABEL stage=go-builder
+ARG USE_LOCAL_DIST=0
 WORKDIR /app/
 RUN apk add --no-cache bash curl jq gcc git go musl-dev
 COPY go.mod go.sum ./
