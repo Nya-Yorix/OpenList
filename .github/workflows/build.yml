@@ -51,9 +51,19 @@ jobs:
           if-no-files-found: error
 
   server:
-    name: 服务端二进制 (Windows/Linux/Android)
+    name: 服务端二进制 (${{ matrix.group }})
     runs-on: ubuntu-latest
     needs: [frontend]
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - group: windows
+            keyword: windows
+          - group: linux
+            keyword: linux
+          - group: android
+            keyword: android
     steps:
       - uses: actions/checkout@v4
 
@@ -67,14 +77,15 @@ jobs:
           go-version-file: go.mod
           cache: true
 
-      - name: 构建全部平台二进制
+      - name: "构建二进制 (目标: ${{ matrix.group }})"
         run: |
           chmod +x workflow/build-all.sh
-          VERSION='${{ inputs.server_version }}' WEBVERSION='${{ inputs.app_version }}' ./workflow/build-all.sh
+          VERSION='${{ inputs.server_version }}' WEBVERSION='${{ inputs.app_version }}' \
+            ./workflow/build-all.sh '${{ matrix.keyword }}'
 
       - uses: actions/upload-artifact@v4
         with:
-          name: server-binaries
+          name: server-${{ matrix.group }}
           path: dist/*.tar.gz
           if-no-files-found: error
 
@@ -93,7 +104,7 @@ jobs:
       - uses: actions/setup-go@v5
         with:
           go-version-file: go.mod
-          cache: false
+          cache: true
 
       - uses: actions/setup-java@v5
         with:
@@ -106,6 +117,19 @@ jobs:
           channel: stable
           cache: true
 
+      - uses: actions/cache@v4
+        with:
+          path: ~/.pub-cache
+          key: pub-cache-${{ runner.os }}-${{ hashFiles('A-OpenList-Mobile/pubspec.lock') }}
+          restore-keys: pub-cache-${{ runner.os }}-
+
+      - uses: actions/cache@v4
+        with:
+          path: ~/go/bin/gomobile
+          key: gomobile-${{ runner.os }}-v1
+
+      - uses: gradle/actions/setup-gradle@v4
+
       - name: 安装 Android NDK 27.0.12077973 与 platform 35
         run: |
           yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses > /dev/null || true
@@ -113,7 +137,9 @@ jobs:
             "ndk;27.0.12077973" "platforms;android-35" "build-tools;35.0.0" > /dev/null
 
       - name: 安装 gomobile
-        run: go install golang.org/x/mobile/cmd/gomobile@latest && "$HOME/go/bin/gomobile" init
+        run: |
+          [ -x "$HOME/go/bin/gomobile" ] || go install golang.org/x/mobile/cmd/gomobile@latest
+          "$HOME/go/bin/gomobile" init
 
       - name: 构建 APK
         env:
@@ -139,7 +165,7 @@ jobs:
   docker:
     name: Docker 镜像 (${{ matrix.platform }})
     runs-on: ubuntu-latest
-    needs: [frontend]
+    needs: [server]
     strategy:
       fail-fast: false
       matrix:
@@ -147,23 +173,18 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: actions/download-artifact@v4
+      - name: 下载服务端二进制
+        uses: actions/download-artifact@v4
         with:
-          name: web-dist
-          path: public/dist
+          name: server-linux
+          path: server-dist
 
-      - uses: actions/setup-go@v5
-        with:
-          go-version-file: go.mod
-          cache: true
-
-      - name: 交叉编译目标架构二进制
+      - name: 准备镜像构建上下文 (复用预编译二进制)
         run: |
-          chmod +x workflow/build-all.sh
-          VERSION='${{ inputs.server_version }}' WEBVERSION='${{ inputs.app_version }}' \
-            OUT_DIR=build-out ./workflow/build-all.sh --no-archive "linux-${{ matrix.platform }}"
           mkdir -p build/linux/${{ matrix.platform }}
-          cp build-out/openlist-linux-${{ matrix.platform }} build/linux/${{ matrix.platform }}/openlist
+          tar -xzf server-dist/openlist-linux-${{ matrix.platform }}.tar.gz \
+            -C build/linux/${{ matrix.platform }}
+          ls -lh build/linux/${{ matrix.platform }}/
 
       - uses: docker/setup-qemu-action@v3
 

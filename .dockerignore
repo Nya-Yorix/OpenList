@@ -1,0 +1,6 @@
+# Docker 构建上下文白名单：仅镜像所需内容（预编译二进制 + Dockerfile.ci + entrypoint）
+*
+!build
+!build/**
+!Dockerfile.ci
+!entrypoint.sh
