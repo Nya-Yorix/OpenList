@@ -1,1 +1,0 @@
-import{Ga as e,Ha as t,Pa as n,Pr as r,ka as i}from"./store-dRly7X4N.js";var a=a=>{let[o,s]=t(!1);return n(i,{get when(){return!o()},get fallback(){return a.fallbackErr},get children(){return n(r,e(a,{onError:()=>{s(!0)}}))}})};export{a as t};

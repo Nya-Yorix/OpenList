@@ -1,1 +1,0 @@
-(function(){System.register([`./store-legacy-D5_1PhD3.js`],function(e,t){var n,r,i,a,o;return{setters:[function(e){n=e.Ga,r=e.Ha,i=e.Pa,a=e.Pr,o=e.ka}],execute:function(){e(`t`,e=>{let[t,s]=r(!1);return i(o,{get when(){return!t()},get fallback(){return e.fallbackErr},get children(){return i(a,n(e,{onError:()=>{s(!0)}}))}})})}}})})();

@@ -58,3 +58,5 @@ A-OpenList-Mobile/.dart_tool/
 A-OpenList-Mobile/android/.gradle/
 A-OpenList-Frontend/dist/
 .ci-*.log
+/public/dist/*
+!/public/dist/README.md
