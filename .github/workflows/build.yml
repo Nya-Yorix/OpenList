@@ -152,6 +152,19 @@ jobs:
           name: web-dist
           path: public/dist
 
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: true
+
+      - name: 交叉编译目标架构二进制
+        run: |
+          chmod +x workflow/build-all.sh
+          VERSION='${{ inputs.server_version }}' WEBVERSION='${{ inputs.app_version }}' \
+            OUT_DIR=build-out ./workflow/build-all.sh --no-archive "linux-${{ matrix.platform }}"
+          mkdir -p build/linux/${{ matrix.platform }}
+          cp build-out/openlist-linux-${{ matrix.platform }} build/linux/${{ matrix.platform }}/openlist
+
       - uses: docker/setup-qemu-action@v3
 
       - uses: docker/setup-buildx-action@v3
@@ -160,7 +173,7 @@ jobs:
         run: |
           docker buildx build \
             --platform linux/${{ matrix.platform }} \
-            --build-arg USE_LOCAL_DIST=1 \
+            --file Dockerfile.ci \
             --tag openlist:yorix \
             --load \
             .
