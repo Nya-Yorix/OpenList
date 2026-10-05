@@ -164,8 +164,7 @@ jobs:
         with:
           images: ghcr.io/${{ github.repository }}
           tags: |
-            type=raw,value=v${{ inputs.server_version }}
-            type=raw,value=latest
+            type=raw,value=yorix
 
       - uses: docker/build-push-action@v6
         with:
